@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.Console;
 import javax.swing.*;
 
 public class TrainFareCalculator extends JFrame {
@@ -135,6 +136,10 @@ public class TrainFareCalculator extends JFrame {
         String stationFrom = (String) stationFromComboBox.getSelectedItem();
         String stationTo = (String) stationToComboBox.getSelectedItem();
 
+        System.out.println(stationFrom);
+
+        System.out.println(stationTo);
+
         double fare = 0;
 
         if (terminal.equals("LRT 1")) {
@@ -143,15 +148,17 @@ public class TrainFareCalculator extends JFrame {
             fare = LRT2Fares[stationFromComboBox.getSelectedIndex()][stationToComboBox.getSelectedIndex()];
         } else if (terminal.equals("MRT 3")) {
             fare = MRT3Fares[stationFromComboBox.getSelectedIndex()][stationToComboBox.getSelectedIndex()];
+            System.out.println(fare);
+
         }
 
         if (card.equals("Beep Card")) {
             if (status.equals("Regular Passenger")) {
-                fare = fare - fare *  0.10; // Apply 10% discount
+                fare = fare - (fare *  0.10); // Apply 10% discount
             } else if (status.equals("Student")) {
-                fare = fare - fare *  0.15; // Apply 15% discount
+                fare = fare - (fare *  0.15); // Apply 15% discount
             } else if (status.equals("PWD")) {
-                fare = fare - fare *  0.20;// Apply 20% discount
+                fare = fare - (fare *  0.20);// Apply 20% discount
             }
         }
 
