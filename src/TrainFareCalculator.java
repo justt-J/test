@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.Console;
+import java.text.DecimalFormat;
 import javax.swing.*;
 
 public class TrainFareCalculator extends JFrame {
@@ -13,6 +13,8 @@ public class TrainFareCalculator extends JFrame {
     private JComboBox<String> stationToComboBox;
     private JButton calculateButton;
     private JLabel fareLabel;
+    private JLabel paymentLabel;
+    private static final DecimalFormat df = new DecimalFormat("0.00");
 
     private final int[][] LRT1Fares = {
         {0, 20, 20, 20, 25, 25, 25, 25, 25, 25, 30, 30, 30, 30, 30, 35, 35, 35, 35, 35}, // FPJ
@@ -73,21 +75,21 @@ public class TrainFareCalculator extends JFrame {
         setTitle("Train Fare Calculator");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new GridLayout(7, 2));
+        setLayout(new GridLayout(8, 2));
 
-        String[] terminals = {"LRT 1", "LRT 2", "MRT 3"};
+        String[] terminals = {"MRT 3"};
         String[] cards = {"Regular", "Beep Card"};
         String[] statuses = {"Regular Passenger", "Student", "PWD"};
-
+        String[] regStat = {"Regular Passenger"};
         String[] lrt1Stations = {"FPJ", "Balintawak", "Monumento", "5th Ave", "R. Papa", "Abad Santos", "Blumentritt", "Tayuman", "Bambang", "D. Jose", "Carriedo", "Central", "UN Avenue", "Pedro Gil", "Quirino", "Vito Cruz", "Gil Puyat", "Libertad", "EDSA", "Baclaran"};
         String[] lrt2Stations = {"Recto", "Legarda", "Pureza", "V. Mapa", "J. Ruiz", "Gilmore", "Betty Go", "Araneta", "Anonas", "Katipunan", "Santolan", "Marikina", "Antipolo"};
         String[] mrt3Stations = {"North Avenue", "Quezon Avenue", "Kamuning", "Cubao", "Santolan-Annapolis", "Ortigas", "Shaw", "Boni", "Guadalupe", "Buendia", "Ayala", "Magallanes", "Taft"};
 
         terminalComboBox = new JComboBox<>(terminals);
         cardComboBox = new JComboBox<>(cards);
-        statusComboBox = new JComboBox<>(statuses);
-        stationFromComboBox = new JComboBox<>(lrt1Stations);
-        stationToComboBox = new JComboBox<>(lrt1Stations);
+        statusComboBox = new JComboBox<>(regStat);
+        stationFromComboBox = new JComboBox<>(mrt3Stations);
+        stationToComboBox = new JComboBox<>(mrt3Stations);
 
         terminalComboBox.addActionListener(e -> {
             String selectedTerminal = (String) terminalComboBox.getSelectedItem();
@@ -103,9 +105,19 @@ public class TrainFareCalculator extends JFrame {
             }
         });
 
+        cardComboBox.addActionListener(e -> {
+            String selectedTerminal = (String) cardComboBox.getSelectedItem();
+            if (selectedTerminal.equals("Regular")) {
+                statusComboBox.setModel(new DefaultComboBoxModel<>(regStat));
+            } else if (selectedTerminal.equals("Beep Card")) {
+                statusComboBox.setModel(new DefaultComboBoxModel<>(statuses));
+            }
+        });
+
         calculateButton = new JButton("Calculate Fare");
         fareLabel = new JLabel("Fare: ");
-
+        paymentLabel = new JLabel("");
+        
         add(new JLabel("Terminal: "));
         add(terminalComboBox);
         add(new JLabel("Card: "));
@@ -118,6 +130,9 @@ public class TrainFareCalculator extends JFrame {
         add(stationToComboBox);
         add(calculateButton);
         add(fareLabel);
+        add(new JLabel("TOTAL PAYMENT: "));
+        add(paymentLabel);
+        
 
         calculateButton.addActionListener(new ActionListener() {
             @Override
@@ -135,35 +150,61 @@ public class TrainFareCalculator extends JFrame {
         String status = (String) statusComboBox.getSelectedItem();
         String stationFrom = (String) stationFromComboBox.getSelectedItem();
         String stationTo = (String) stationToComboBox.getSelectedItem();
-
+    
         System.out.println(stationFrom);
-
         System.out.println(stationTo);
-
+    
+        double totalFare = 0;
         double fare = 0;
-
+        double payment = 0;
+    
         if (terminal.equals("LRT 1")) {
-            fare = LRT1Fares[stationFromComboBox.getSelectedIndex()][stationToComboBox.getSelectedIndex()];
+            int startIndex = stationFromComboBox.getSelectedIndex();
+            int endIndex = stationToComboBox.getSelectedIndex();
+            int increment = startIndex < endIndex ? 1 : -1;
+            for (int i = startIndex; i != endIndex; i += increment) {
+                totalFare += LRT1Fares[i][i + increment];
+            }
         } else if (terminal.equals("LRT 2")) {
-            fare = LRT2Fares[stationFromComboBox.getSelectedIndex()][stationToComboBox.getSelectedIndex()];
+            int startIndex = stationFromComboBox.getSelectedIndex();
+            int endIndex = stationToComboBox.getSelectedIndex();
+            int increment = startIndex < endIndex ? 1 : -1;
+            for (int i = startIndex; i != endIndex; i += increment) {
+                totalFare += LRT2Fares[i][i + increment];
+            }
         } else if (terminal.equals("MRT 3")) {
+            int startIndex = stationFromComboBox.getSelectedIndex();
+            int endIndex = stationToComboBox.getSelectedIndex();
             fare = MRT3Fares[stationFromComboBox.getSelectedIndex()][stationToComboBox.getSelectedIndex()];
-            System.out.println(fare);
 
-        }
-
-        if (card.equals("Beep Card")) {
-            if (status.equals("Regular Passenger")) {
-                fare = fare - (fare *  0.10); // Apply 10% discount
-            } else if (status.equals("Student")) {
-                fare = fare - (fare *  0.15); // Apply 15% discount
-            } else if (status.equals("PWD")) {
-                fare = fare - (fare *  0.20);// Apply 20% discount
+            int increment = startIndex < endIndex ? 1 : -1;
+            for (int i = startIndex; i != endIndex; i += increment) {
+                totalFare += MRT3Fares[i][i + increment];
             }
         }
+    
+        if (card.equals("Beep Card")) {
+            if (status.equals("Regular Passenger")) {
+                totalFare = totalFare - (totalFare * 0.10);// Apply 10% discount
 
+                fare = fare - (fare * 0.10);
+            } else if (status.equals("Student")) {
+                totalFare = totalFare - (totalFare * 0.15);// Apply 15% discount
+                fare = fare - (fare * 0.15);
+            } else if (status.equals("PWD")) {
+                totalFare = totalFare - (totalFare * 0.20);// Apply 20% discount
+                fare = fare - (fare * 0.20);
+                System.out.println(fare);
+            }
+        }
+        System.out.println(fare);
+        
+        payment = totalFare;
+        
         fareLabel.setText("Fare: " + fare + " PHP");
+        paymentLabel.setText( df.format(payment) + " PHP");
     }
+    
 
     public static void main(String[] args) {
         new TrainFareCalculator();
